@@ -1,0 +1,149 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: wayantrails_db
+    environment:
+      POSTGRES_DB: wayantrails_dev
+      POSTGRES_USER: wayantrails_user
+      POSTGRES_PASSWORD: wayantrails_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - wayantrails_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wayantrails_user -d wayantrails_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and Celery
+  redis:
+    image: redis:7-alpine
+    container_name: wayantrails_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - wayantrails_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Django Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: wayantrails_backend
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://wayantrails_user:wayantrails_pass@db:5432/wayantrails_dev
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+      - backend_media:/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - wayantrails_network
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: wayantrails_frontend
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - wayantrails_network
+    command: npm run dev
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: wayantrails_nginx
+    volumes:
+      - ./nginx/dev.conf:/etc/nginx/conf.d/default.conf
+      - backend_media:/var/www/media
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - wayantrails_network
+
+  # Celery Worker (for async tasks)
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: wayantrails_celery_worker
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://wayantrails_user:wayantrails_pass@db:5432/wayantrails_dev
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+      - redis
+    networks:
+      - wayantrails_network
+    command: celery -A wayantrails_backend worker -l info
+
+  # Celery Beat (for scheduled tasks)
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: wayantrails_celery_beat
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://wayantrails_user:wayantrails_pass@db:5432/wayantrails_dev
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+      - redis
+    networks:
+      - wayantrails_network
+    command: celery -A wayantrails_backend beat -l info
+
+networks:
+  wayantrails_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  backend_media:
