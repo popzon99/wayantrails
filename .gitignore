@@ -40,6 +40,7 @@ ENV/
 .idea/
 *.swp
 *.swo
+.claude/
 
 # Coverage / Testing
 htmlcov/
