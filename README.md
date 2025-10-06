@@ -235,8 +235,8 @@ wayantrails/
 │   └── public/               # Static assets
 ├── docs/                      # Documentation
 │   ├── BOOKING_SYSTEM.md     # Booking system guide
-│   ├── PAYMENT_INTEGRATION_GUIDE.md
-│   └── DEVELOPMENT_PLAN.md   # Development roadmap
+│   └── PAYMENT_INTEGRATION_GUIDE.md
+├── DEVELOPMENT_PLAN.md        # Development roadmap (root level)
 ├── .github/workflows/         # CI/CD pipelines
 └── .env.example              # Environment template
 ```
@@ -284,9 +284,9 @@ Currently using **Mock Razorpay Gateway** for development:
 
 ## 📚 Documentation
 
+- [Development Plan & Roadmap](DEVELOPMENT_PLAN.md) ⭐ **Start Here**
 - [Booking System Guide](docs/BOOKING_SYSTEM.md)
 - [Payment Integration Guide](docs/PAYMENT_INTEGRATION_GUIDE.md)
-- [Development Plan & Roadmap](docs/DEVELOPMENT_PLAN.md)
 - [Google Places Setup](docs/GOOGLE_PLACES_SETUP.md)
 - [OpenStreetMap Integration](docs/OPENSTREETMAP_SETUP.md)
 
