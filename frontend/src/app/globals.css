@@ -1,26 +1,168 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    background-color: white;
+    color: #1a1a1a;
   }
 }
 
+/* CSS Variables for Colors */
+:root {
+  /* Primary Colors */
+  --sand-tan: #e1b382;
+  --sand-tan-shadow: #c89666;
+  --sand-tan-light: #f0d4b3;
+  --sand-tan-dark: #d4a571;
+
+  /* Secondary Colors */
+  --night-blue: #2d545e;
+  --night-blue-shadow: #12343b;
+  --night-blue-light: #3d6470;
+  --night-blue-dark: #1d444d;
+
+  /* Accent Colors */
+  --forest-green: #4a7c59;
+  --sunset-orange: #d97642;
+  --mist-gray: #f5f5f5;
+  --cloud-white: #ffffff;
+
+  /* Semantic Colors */
+  --success: #4a7c59;
+  --error: #dc2626;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+
+  /* Text Colors */
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --text-inverse: #ffffff;
+}
+
+/* Global Typography Classes */
+.heading-hero {
+  font-family: var(--font-display), serif;
+  font-size: 3rem;
+  font-weight: bold;
+  color: var(--night-blue);
+  line-height: 1.2;
+}
+
+@media (min-width: 768px) {
+  .heading-hero {
+    font-size: 3.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heading-hero {
+    font-size: 4.5rem;
+  }
+}
+
+.heading-1 {
+  font-family: var(--font-display), serif;
+  font-size: 2.25rem;
+  font-weight: bold;
+  color: var(--night-blue);
+  line-height: 1.2;
+}
+
+@media (min-width: 768px) {
+  .heading-1 {
+    font-size: 3rem;
+  }
+}
+
+.heading-2 {
+  font-family: var(--font-display), serif;
+  font-size: 1.875rem;
+  font-weight: bold;
+  color: var(--night-blue);
+  line-height: 1.3;
+}
+
+@media (min-width: 768px) {
+  .heading-2 {
+    font-size: 2.25rem;
+  }
+}
+
+.heading-3 {
+  font-family: var(--font-sans), sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--night-blue);
+  line-height: 1.3;
+}
+
+@media (min-width: 768px) {
+  .heading-3 {
+    font-size: 1.875rem;
+  }
+}
+
+.heading-4 {
+  font-family: var(--font-sans), sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--night-blue);
+}
+
+@media (min-width: 768px) {
+  .heading-4 {
+    font-size: 1.5rem;
+  }
+}
+
+.body-large {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+
+.body-normal {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+
+.body-small {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.75;
+}
+
+/* Global styles */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #ffffff;
+  color: #1a1a1a;
+}
+
+button {
+  outline: none;
+}
+
+button:focus {
+  outline: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+::selection {
+  background-color: rgba(225, 179, 130, 0.3);
+  color: #1a1a1a;
 }

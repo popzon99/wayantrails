@@ -61,3 +61,28 @@ Thumbs.db
 # Misc
 *.bak
 *.tmp
+nul
+
+# Claude AI generated documentation (keep only essential docs)
+AMENITIES_INDEX.md
+AMENITIES_INSTALL.md
+AMENITIES_SHOWCASE.md
+AMENITIES_SUMMARY.md
+BOOKING_IMPLEMENTATION_SUMMARY.md
+BOOKING_MODAL_FIX.md
+IMPLEMENTATION_COMPLETE.md
+MOCK_PAYMENT_GUIDE.md
+PAYMENT_SYSTEM_SUMMARY.md
+SERVERS_RUNNING.md
+SYSTEM_READY.md
+frontend/AMENITIES_GUIDE.md
+frontend/API_INTEGRATION.md
+frontend/INTEGRATION_SUMMARY.md
+frontend/PROGRESS_SUMMARY.md
+
+# Test files (keep in repo but ignore output)
+backend/test_*.py
+*_output.html
+
+# Package lock files (optional - include if using specific versions)
+# frontend/package-lock.json

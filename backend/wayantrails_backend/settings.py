@@ -4,7 +4,7 @@ Django settings for WayanTrails backend.
 import os
 from pathlib import Path
 from decouple import config
-import dj_database_url
+# import dj_database_url  # Commented out for development
 
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-production')
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver').split(',')
 
 # Application definition
 DJANGO_APPS = [
@@ -29,15 +29,18 @@ THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
+    'drf_spectacular',
     'corsheaders',
+    'phonenumber_field',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'storages',
+    # 'storages',  # Commented out for development
 ]
 
 LOCAL_APPS = [
+    'core',
     'users',
     'resorts',
     'homestays',
@@ -60,6 +63,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -86,9 +90,10 @@ WSGI_APPLICATION = 'wayantrails_backend.wsgi.application'
 
 # Database
 DATABASES = {
-    'default': dj_database_url.config(
-        default=config('DATABASE_URL', default='sqlite:///db.sqlite3')
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
 # Custom User Model
@@ -144,14 +149,22 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
-    'DEFAULT_THROTTLE_CLASSES': [
+    'DEFAULT_THROTTLE_CLASSES': [] if DEBUG else [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
         'user': '1000/hour'
-    }
+    },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# drf-spectacular
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'WayanTrails API',
+    'DESCRIPTION': 'API documentation for WayanTrails platform',
+    'VERSION': '0.1.0',
 }
 
 # JWT Configuration
@@ -193,24 +206,43 @@ if EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend':
 
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@wayantrails.com')
 
-# Celery Configuration
-CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
+# Celery Configuration (disabled for development)
+if not DEBUG or config('USE_CELERY', default=False, cast=bool):
+    CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
+    CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
+    CELERY_ACCEPT_CONTENT = ['json']
+    CELERY_TASK_SERIALIZER = 'json'
+    CELERY_RESULT_SERIALIZER = 'json'
+    CELERY_TIMEZONE = TIME_ZONE
+else:
+    # Use synchronous task execution for development
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
 
 # Cache Configuration
 CACHES = {
     'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': config('REDIS_URL', default='redis://localhost:6379/1'),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
     }
 }
+
+# Disable Redis for development
+if not DEBUG:
+    try:
+        import redis
+        redis_url = config('REDIS_URL', default='redis://localhost:6379/1')
+        CACHES = {
+            'default': {
+                'BACKEND': 'django_redis.cache.RedisCache',
+                'LOCATION': redis_url,
+                'OPTIONS': {
+                    'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                }
+            }
+        }
+    except ImportError:
+        pass
 
 # Logging Configuration
 LOGGING = {
@@ -263,13 +295,21 @@ if not DEBUG:
 # Payment Gateway Configuration
 RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='')
 RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='')
+RAZORPAY_WEBHOOK_SECRET = config('RAZORPAY_WEBHOOK_SECRET', default='')
+
+# Mock Payment Mode (set to False in production with real Razorpay keys)
+USE_MOCK_PAYMENT = config('USE_MOCK_PAYMENT', default=True, cast=bool)
 
 STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY', default='')
 STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
 
 # External API Keys
 GOOGLE_MAPS_API_KEY = config('GOOGLE_MAPS_API_KEY', default='')
-WHATSAPP_PHONE_NUMBER = config('WHATSAPP_PHONE_NUMBER', default='')
+GOOGLE_PLACES_API_KEY = config('GOOGLE_PLACES_API_KEY', default='')
+WHATSAPP_PHONE_NUMBER = config('WHATSAPP_PHONE_NUMBER', default='919876543210')
+
+# Frontend URL (for payment callbacks and email links)
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 
 # Cloudinary Configuration
 CLOUDINARY_STORAGE = {
