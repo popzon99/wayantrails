@@ -64,18 +64,18 @@ Thumbs.db
 *.tmp
 nul
 
-# Claude AI generated documentation (keep only essential docs)
-AMENITIES_INDEX.md
-AMENITIES_INSTALL.md
-AMENITIES_SHOWCASE.md
-AMENITIES_SUMMARY.md
-BOOKING_IMPLEMENTATION_SUMMARY.md
-BOOKING_MODAL_FIX.md
-IMPLEMENTATION_COMPLETE.md
-MOCK_PAYMENT_GUIDE.md
-PAYMENT_SYSTEM_SUMMARY.md
-SERVERS_RUNNING.md
-SYSTEM_READY.md
+# Claude AI generated documentation (keep only essential docs in docs/ folder)
+AMENITIES_*.md
+BOOKING_*.md
+IMPLEMENTATION_*.md
+MOCK_PAYMENT_*.md
+PAYMENT_*.md
+SERVERS_*.md
+SYSTEM_*.md
+QUICK_REFERENCE.md
+GITHUB_PUSH_SUMMARY.md
+*_SUMMARY.md
+*_GUIDE.md
 frontend/AMENITIES_GUIDE.md
 frontend/API_INTEGRATION.md
 frontend/INTEGRATION_SUMMARY.md
