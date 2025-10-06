@@ -121,6 +121,10 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         from django.contrib.contenttypes.models import ContentType
         from django.utils import timezone
         from datetime import datetime
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.info(f"Creating booking with data: {validated_data}")
 
         items_data = validated_data.pop('items', [])
 
@@ -146,21 +150,11 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             validated_data['booking_number'] = f'WT-{year}-{new_num:04d}'
 
         # Auto-set content_type based on booking_type if not provided
+        # Note: content_type field is a CharField, not a FK to ContentType
         if 'content_type' not in validated_data or validated_data['content_type'] is None:
             booking_type = validated_data.get('booking_type')
-            model_map = {
-                'resort': 'resorts.resort',
-                'homestay': 'homestays.homestay',
-                'rental': 'rentals.rental',
-                'destination': 'destinations.destination',
-                'service': 'services.service',
-            }
-            app_model = model_map.get(booking_type)
-            if app_model:
-                app_label, model = app_model.split('.')
-                validated_data['content_type'] = ContentType.objects.get(
-                    app_label=app_label, model=model
-                )
+            # Simply set content_type to match booking_type (both are strings)
+            validated_data['content_type'] = booking_type
 
         # Calculate commission (5% default)
         commission_rate = 0.05
