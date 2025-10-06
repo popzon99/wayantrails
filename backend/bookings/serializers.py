@@ -118,6 +118,8 @@ class BookingCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create booking with items."""
+        from django.contrib.contenttypes.models import ContentType
+
         items_data = validated_data.pop('items', [])
 
         # Set user if authenticated
@@ -125,9 +127,26 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             validated_data['user'] = request.user
 
+        # Auto-set content_type based on booking_type if not provided
+        if 'content_type' not in validated_data or validated_data['content_type'] is None:
+            booking_type = validated_data.get('booking_type')
+            model_map = {
+                'resort': 'resorts.resort',
+                'homestay': 'homestays.homestay',
+                'rental': 'rentals.rental',
+                'destination': 'destinations.destination',
+                'service': 'services.service',
+            }
+            app_model = model_map.get(booking_type)
+            if app_model:
+                app_label, model = app_model.split('.')
+                validated_data['content_type'] = ContentType.objects.get(
+                    app_label=app_label, model=model
+                )
+
         # Calculate commission (5% default)
         commission_rate = 0.05
-        validated_data['commission_amount'] = validated_data['base_amount'] * commission_rate
+        validated_data['commission_amount'] = validated_data.get('base_amount', 0) * commission_rate
 
         booking = Booking.objects.create(**validated_data)
 
