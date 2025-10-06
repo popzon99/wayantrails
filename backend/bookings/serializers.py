@@ -119,6 +119,8 @@ class BookingCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Create booking with items."""
         from django.contrib.contenttypes.models import ContentType
+        from django.utils import timezone
+        from datetime import datetime
 
         items_data = validated_data.pop('items', [])
 
@@ -126,6 +128,22 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             validated_data['user'] = request.user
+
+        # Auto-generate booking_number if not provided
+        if 'booking_number' not in validated_data or not validated_data['booking_number']:
+            # Format: WT-YYYY-NNNN (e.g., WT-2025-0001)
+            year = datetime.now().year
+            last_booking = Booking.objects.filter(
+                booking_number__startswith=f'WT-{year}-'
+            ).order_by('-booking_number').first()
+
+            if last_booking:
+                last_num = int(last_booking.booking_number.split('-')[-1])
+                new_num = last_num + 1
+            else:
+                new_num = 1
+
+            validated_data['booking_number'] = f'WT-{year}-{new_num:04d}'
 
         # Auto-set content_type based on booking_type if not provided
         if 'content_type' not in validated_data or validated_data['content_type'] is None:

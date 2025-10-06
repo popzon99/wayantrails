@@ -47,17 +47,44 @@ export default function BookingModal({
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [bookingData, setBookingData] = useState({
-    checkIn: initialCheckIn,
-    checkOut: initialCheckOut,
-    adults: initialAdults,
-    children: initialChildren,
-    roomTypeId: roomTypes[0]?.id || 0,
-    guestName: '',
-    guestEmail: '',
-    guestPhone: '',
-    specialRequests: ''
-  });
+
+  // Initialize booking data from localStorage or props
+  const getInitialBookingData = () => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('wayantrails_booking_draft');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          // Only use saved data if it's for the same resort
+          if (parsed.resortId === resort.id) {
+            return {
+              ...parsed,
+              checkIn: initialCheckIn || parsed.checkIn,
+              checkOut: initialCheckOut || parsed.checkOut,
+              adults: initialAdults || parsed.adults,
+              children: initialChildren || parsed.children,
+            };
+          }
+        } catch (e) {
+          console.error('Failed to parse saved booking data', e);
+        }
+      }
+    }
+    return {
+      resortId: resort.id,
+      checkIn: initialCheckIn,
+      checkOut: initialCheckOut,
+      adults: initialAdults,
+      children: initialChildren,
+      roomTypeId: roomTypes[0]?.id || 0,
+      guestName: '',
+      guestEmail: '',
+      guestPhone: '',
+      specialRequests: ''
+    };
+  };
+
+  const [bookingData, setBookingData] = useState(getInitialBookingData());
 
   // Update booking data when initial values change
   useEffect(() => {
@@ -69,6 +96,13 @@ export default function BookingModal({
       children: initialChildren
     }));
   }, [initialCheckIn, initialCheckOut, initialAdults, initialChildren]);
+
+  // Save booking data to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && bookingData) {
+      localStorage.setItem('wayantrails_booking_draft', JSON.stringify(bookingData));
+    }
+  }, [bookingData]);
 
   const selectedRoom = roomTypes.find(r => r.id === bookingData.roomTypeId);
   const nights = calculateNights(bookingData.checkIn, bookingData.checkOut);
@@ -124,6 +158,11 @@ export default function BookingModal({
       };
 
       const booking = await bookingsApi.create(payload);
+
+      // Clear saved booking draft from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('wayantrails_booking_draft');
+      }
 
       // Close modal
       onClose();
